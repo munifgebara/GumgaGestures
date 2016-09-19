@@ -1,5 +1,8 @@
 package br.com.gumga.gestures.desktop;
 
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,6 +15,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
+import javax.swing.JCheckBox;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import org.openni.Device;
@@ -87,8 +92,17 @@ public class Program {
 			System.out.println("DEBUG: User Tracker Created!");
 
 			// criei o CoreGame (agora vai!!!)
-			GumgaGestureViewer ggv = new GumgaGestureViewer(videoStream, userTracker);
-			mainWindow.add(ggv);
+			final GumgaGestureViewer ggv = new GumgaGestureViewer(videoStream, userTracker);
+			final JCheckBox videoCheckBox = new JCheckBox("Mostra Video",true);
+			videoCheckBox.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					ggv.setMostraVideo(videoCheckBox.isSelected());
+				}
+			});
+			mainWindow.add(videoCheckBox,BorderLayout.BEFORE_FIRST_LINE);
+			mainWindow.add(ggv,BorderLayout.CENTER);
 			mainWindow.pack();
 			mainWindow.setVisible(true);
 
