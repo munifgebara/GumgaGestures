@@ -1,6 +1,9 @@
 package br.com.gumga.gestures.desktop;
 
 import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.MenuItem;
+import java.awt.PopupMenu;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
@@ -15,9 +18,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
+import javax.swing.Icon;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 
 import org.openni.Device;
 import org.openni.DeviceInfo;
@@ -45,9 +53,8 @@ public class Program {
 
 	public Program() {
 		loadProperties();
-		validaInstancia();
+		//validaInstancia();
 
-		mainWindow = new MainWindow();
 		try {
 			OpenNI.initialize(); // efetivar o "Load" do driver
 			System.out.println("DEBUG: OpenNI initialized");
@@ -58,8 +65,8 @@ public class Program {
 													// dispositivos
 													// reconhecidos na maquina
 			if (deviceList.isEmpty()) {
-				System.out.println("FATAL: 0 Kinect Found!");
-				System.exit(0);
+				JOptionPane.showMessageDialog(null,"Kinect não encontrado, verifique os drivers.");
+				System.exit(1);
 			}
 			// listando dispositivos encontrados
 			for (DeviceInfo info : deviceList) {
@@ -93,24 +100,54 @@ public class Program {
 
 			// criei o CoreGame (agora vai!!!)
 			final GumgaGestureViewer ggv = new GumgaGestureViewer(videoStream, userTracker);
-			final JCheckBox videoCheckBox = new JCheckBox("Mostra Video",true);
+			mainWindow = new MainWindow(ggv);
+			final JPanel painel=new JPanel(new FlowLayout());
+			painel.setVisible(false);
+			final JCheckBox videoCheckBox = new JCheckBox("Video",true);
 			videoCheckBox.addActionListener(new ActionListener() {
-				
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					ggv.setMostraVideo(videoCheckBox.isSelected());
 				}
 			});
-			mainWindow.add(videoCheckBox,BorderLayout.BEFORE_FIRST_LINE);
+			final JCheckBox sempreCheckBox = new JCheckBox("Visível",false);
+			sempreCheckBox.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					mainWindow.setAlwaysOnTop(sempreCheckBox.isSelected());
+				}
+			});
+			JButton btFechar=new JButton("X");
+			btFechar.setBorder(null);
+			btFechar.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					System.exit(0);
+				}
+			});
+			((FlowLayout)painel.getLayout()).setAlignment(FlowLayout.RIGHT);
+			painel.setBorder(null);
+
+			painel.add(new JLabel("Gumga"));
+			painel.add(videoCheckBox);
+			painel.add(sempreCheckBox);
+			painel.add(btFechar);
+			
+			mainWindow.add(painel,BorderLayout.BEFORE_FIRST_LINE);
 			mainWindow.add(ggv,BorderLayout.CENTER);
 			mainWindow.pack();
+			mainWindow.colocaNoCanto();
 			mainWindow.setVisible(true);
+			new PoseServer(ggv);
 
 		} catch (Exception ex) {
 			System.err.println("APPLICATION: " + ex.getMessage());
 			ex.printStackTrace();
 		}
 	}
+	
+	
 
 	private void validaInstancia() {
 		String tk = properties.getProperty("gumgaToken");

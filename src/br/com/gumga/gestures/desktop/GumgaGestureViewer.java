@@ -45,7 +45,7 @@ public class GumgaGestureViewer extends Component implements VideoStream.NewFram
 	private transient VideoFrameRef videoFrame;
 	private transient int[] imagePixels;
 	private transient UserTrackerFrameRef userFrame;
-	Map<JointType, Point2D<Float>> screenCoordsJoints;
+	private Map<JointType, Point2D<Float>> screenCoordsJoints;
 
 	private Robot robot;
 
@@ -71,6 +71,14 @@ public class GumgaGestureViewer extends Component implements VideoStream.NewFram
 		}
 		aviso("INICIO", 4000);
 	}
+	
+	
+
+	public Map<JointType, Point2D<Float>> getScreenCoordsJoints() {
+		return screenCoordsJoints;
+	}
+
+
 
 	@Override
 	public synchronized void onNewFrame(UserTracker arg0) {
@@ -78,6 +86,15 @@ public class GumgaGestureViewer extends Component implements VideoStream.NewFram
 		screenCoordsJoints.clear();
 		if (userFrame != null && !userFrame.getUsers().isEmpty()) {
 			UserData userData = userFrame.getUsers().get(0);
+			float z=100000;
+			for (UserData ud : userFrame.getUsers()) {
+				SkeletonJoint h = ud.getSkeleton().getJoint(HEAD);
+				if (h!=null && h.getPosition().getZ()<z){
+					userData=ud;
+					z=h.getPosition().getZ();
+				}
+			}
+
 			userTracker.startSkeletonTracking(userData.getId());
 			if (userData.getSkeleton().getState() == SkeletonState.TRACKED) {
 				Skeleton skeleton = userData.getSkeleton();
@@ -87,6 +104,7 @@ public class GumgaGestureViewer extends Component implements VideoStream.NewFram
 					screenCoordsJoints.put(key, converteTamhoTela(convertJointCoordinatesToDepth));
 				}
 			}
+
 		}
 	}
 
@@ -148,15 +166,15 @@ public class GumgaGestureViewer extends Component implements VideoStream.NewFram
 		desenhaEsqueleto((Graphics2D) g);
 		desenhaGrid((Graphics2D) g);
 		g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 40));
-		g.drawString(ultimaPoseMaoDireita, 5, 30);
-		g.drawString(fraseDireita, 5, 70);
-		g.drawString(ultimaPoseMaoEsquerda, 5, 110);
-		g.drawString(fraseEsquerda, 5, 150);
+		//g.drawString(ultimaPoseMaoDireita, 5, 30);
+		//g.drawString(fraseDireita, 5, 70);
+		//g.drawString(ultimaPoseMaoEsquerda, 5, 110);
+		//g.drawString(fraseEsquerda, 5, 150);
 		desenhaAviso((Graphics2D) g);
 	}
 
 	public void desenhaAviso(Graphics2D g) {
-		g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 60));
+		g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, this.getHeight()/10));
 		if (System.currentTimeMillis() < tempoAviso) {
 			g.drawString(mensagemAviso, 20, this.getHeight() - 5);
 		}
@@ -178,7 +196,7 @@ public class GumgaGestureViewer extends Component implements VideoStream.NewFram
 		g2d.setStroke(new BasicStroke(5));
 		if (screenCoordsJoints.get(HEAD) != null && screenCoordsJoints.get(NECK) != null) {
 			int raio = Math.abs(screenCoordsJoints.get(HEAD).getY().intValue() - screenCoordsJoints.get(NECK).getY().intValue());
-			g2d.drawOval(screenCoordsJoints.get(HEAD).getX().intValue()-raio/2, screenCoordsJoints.get(HEAD).getY().intValue()-raio/2, raio, raio);
+			g2d.drawOval(screenCoordsJoints.get(HEAD).getX().intValue() - raio / 2, screenCoordsJoints.get(HEAD).getY().intValue() - raio / 2, raio, raio);
 		}
 		desenhaLinha(g2d, HEAD, NECK);
 		desenhaLinha(g2d, TORSO, NECK);
@@ -327,7 +345,7 @@ public class GumgaGestureViewer extends Component implements VideoStream.NewFram
 			}
 		}
 		if (System.currentTimeMillis() - tempoUltimaPoseDireita > 1000) {
-			fraseDireita = "";
+			fraseDireita = poseCorrenteMaoDireita;
 		}
 
 		if (!poseCorrenteMaoEsquerda.equals(ultimaPoseMaoEsquerda)) {
@@ -340,7 +358,7 @@ public class GumgaGestureViewer extends Component implements VideoStream.NewFram
 		}
 
 		if (System.currentTimeMillis() - tempoUltimaPoseEsquerda > 1000) {
-			fraseEsquerda = "";
+			fraseEsquerda = poseCorrenteMaoEsquerda;
 		}
 
 	}
@@ -387,7 +405,10 @@ public class GumgaGestureViewer extends Component implements VideoStream.NewFram
 
 	public void setMostraVideo(boolean selected) {
 		this.mostraVideo = selected;
+	}
 
+	public boolean isMostraVideo() {
+		return this.mostraVideo;
 	}
 
 }
