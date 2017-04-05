@@ -139,7 +139,8 @@ public class Program {
 			mainWindow.pack();
 			mainWindow.colocaNoCanto();
 			mainWindow.setVisible(true);
-			new PoseServer(ggv);
+			//new PoseServer(ggv);
+			new HttpsPoseServer(ggv);
 
 		} catch (Exception ex) {
 			System.err.println("APPLICATION: " + ex.getMessage());
