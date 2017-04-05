@@ -16,9 +16,11 @@ import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.imageio.ImageIO;
 
@@ -46,6 +48,7 @@ public class GumgaGestureViewer extends Component implements VideoStream.NewFram
 	private transient int[] imagePixels;
 	private transient UserTrackerFrameRef userFrame;
 	private Map<JointType, Point2D<Float>> screenCoordsJoints;
+	private Map<JointType, Point3D> skel3d;
 
 	private Robot robot;
 
@@ -58,7 +61,8 @@ public class GumgaGestureViewer extends Component implements VideoStream.NewFram
 
 	public GumgaGestureViewer(VideoStream videoStream, UserTracker userTracker) {
 		runnable = (Runnable) Toolkit.getDefaultToolkit().getDesktopProperty("win.sound.exclamation");
-		screenCoordsJoints = new HashMap<>();
+		screenCoordsJoints =new ConcurrentHashMap<>();
+		skel3d=new ConcurrentHashMap<>();
 		this.videoStream = videoStream;
 		this.userTracker = userTracker;
 		this.setPreferredSize(new Dimension(640, 480));
@@ -73,6 +77,36 @@ public class GumgaGestureViewer extends Component implements VideoStream.NewFram
 	}
 	
 	
+	
+	
+
+	public Map<JointType, Point3D> getSkel3d() {
+		return skel3d;
+	}
+
+	public long getTempoAviso() {
+		return tempoAviso;
+	}
+
+
+
+	public void setTempoAviso(long tempoAviso) {
+		this.tempoAviso = tempoAviso;
+	}
+
+
+
+	public String getMensagemAviso() {
+		return mensagemAviso;
+	}
+
+
+
+	public void setMensagemAviso(String mensagemAviso) {
+		this.mensagemAviso = mensagemAviso;
+	}
+
+
 
 	public Map<JointType, Point2D<Float>> getScreenCoordsJoints() {
 		return screenCoordsJoints;
@@ -84,6 +118,8 @@ public class GumgaGestureViewer extends Component implements VideoStream.NewFram
 	public synchronized void onNewFrame(UserTracker arg0) {
 		userFrame = userTracker.readFrame();
 		screenCoordsJoints.clear();
+		skel3d.clear();
+
 		if (userFrame != null && !userFrame.getUsers().isEmpty()) {
 			UserData userData = userFrame.getUsers().get(0);
 			float z=100000;
@@ -102,6 +138,7 @@ public class GumgaGestureViewer extends Component implements VideoStream.NewFram
 				for (JointType key : JointType.values()) {
 					Point2D<Float> convertJointCoordinatesToDepth = userTracker.convertJointCoordinatesToDepth(skeleton.getJoint(key).getPosition());
 					screenCoordsJoints.put(key, converteTamhoTela(convertJointCoordinatesToDepth));
+					skel3d.put(key, new Point3D(skeleton.getJoint(key).getPosition().getX(), skeleton.getJoint(key).getPosition().getY(), skeleton.getJoint(key).getPosition().getZ()));
 				}
 			}
 
@@ -365,26 +402,26 @@ public class GumgaGestureViewer extends Component implements VideoStream.NewFram
 
 	private boolean interpretaFrases(String frase) {
 		if (frase.contains(">MAO_DIREITA_CENTRO_DIREITA>MAO_DIREITA_CENTRO_ESQUERDA")) {
-			aviso("ESQUERDA", 2000);
+			aviso("ESQUERDA", 700);
 			robot.keyPress(KeyEvent.VK_LEFT);
 			robot.keyRelease(KeyEvent.VK_LEFT);
 			return true;
 		}
 		if (frase.contains(">MAO_ESQUERDA_CENTRO_ESQUERDA>MAO_ESQUERDA_CENTRO_DIREITA")) {
-			aviso("DIREITA", 2000);
+			aviso("DIREITA", 700);
 			robot.keyPress(KeyEvent.VK_RIGHT);
 			robot.keyRelease(KeyEvent.VK_RIGHT);
 			return true;
 		}
 		if (frase.contains(">MAO_DIREITA_CENTRO_DIREITA>MAO_DIREITA_ACIMA_DIREITA")) {
-			aviso("SOBE", 2000);
+			aviso("SOBE", 700);
 			robot.keyPress(KeyEvent.VK_PAGE_DOWN);
 			robot.keyRelease(KeyEvent.VK_PAGE_DOWN);
 			return true;
 		}
 
 		if (frase.contains(">MAO_ESQUERDA_ACIMA_ESQUERDA>MAO_ESQUERDA_CENTRO_ESQUERDA")) {
-			aviso("DESCE", 2000);
+			aviso("DESCE", 700);
 			robot.keyPress(KeyEvent.VK_PAGE_UP);
 			robot.keyRelease(KeyEvent.VK_PAGE_UP);
 			return true;
@@ -399,7 +436,7 @@ public class GumgaGestureViewer extends Component implements VideoStream.NewFram
 		avisoNr++;
 		if (runnable != null)
 			runnable.run();
-		mensagemAviso = aviso + " " + avisoNr;
+		mensagemAviso = aviso;
 		tempoAviso = System.currentTimeMillis() + tempo;
 	}
 
@@ -412,3 +449,15 @@ public class GumgaGestureViewer extends Component implements VideoStream.NewFram
 	}
 
 }
+
+
+class Point3D{
+	public double x,y,z;
+	public Point3D(double x,double y, double z){
+		this.x=x;
+		this.y=y;
+		this.z=z;
+	}
+	
+}
+
