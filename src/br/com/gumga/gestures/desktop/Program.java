@@ -141,6 +141,7 @@ public class Program {
 			mainWindow.setVisible(true);
 			//new PoseServer(ggv);
 			new HttpsPoseServer(ggv);
+			//new PoseServer(ggv);
 
 		} catch (Exception ex) {
 			System.err.println("APPLICATION: " + ex.getMessage());

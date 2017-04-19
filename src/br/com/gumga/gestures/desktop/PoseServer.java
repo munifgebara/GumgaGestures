@@ -1,3 +1,5 @@
+//https://127.0.0.1:8000/pose
+
 package br.com.gumga.gestures.desktop;
 
 import java.io.IOException;
@@ -23,7 +25,7 @@ public class PoseServer {
 	public void initServer() {
 		
 		try {
-			HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
+			HttpServer server = HttpServer.create(new InetSocketAddress(18000), 0);
 			server.createContext("/pose", new PoseHandler());
 			server.setExecutor(null); // creates a default executor
 			server.start();
@@ -74,6 +76,7 @@ public class PoseServer {
 				ex.printStackTrace();
 			}
 			he.getResponseBody().close();
+			he.close();
 		}
 
 	}

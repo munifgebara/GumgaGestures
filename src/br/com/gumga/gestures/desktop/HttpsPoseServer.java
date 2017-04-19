@@ -66,6 +66,7 @@ public class HttpsPoseServer {
                         params.setNeedClientAuth(false);
                         params.setCipherSuites(engine.getEnabledCipherSuites());
                         params.setProtocols(engine.getEnabledProtocols());
+                        
 
                         // get the default parameters
                         SSLParameters defaultSSLParameters = c.getDefaultSSLParameters();
@@ -96,13 +97,14 @@ public class HttpsPoseServer {
 
 		@Override
 		public void handle(HttpExchange he) throws IOException {
-			final int TEMPO = 75;
+			final int TEMPO = 50;
 			he.getResponseHeaders().set("Content-Type", "text/event-stream");
 			he.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
 			he.getResponseHeaders().set("Access-Control-Allow-Method", "POST,  GET, PUT, DELETE, OPTIONS,HEAD");
 			he.sendResponseHeaders(200, 0);
 			try {
-				while (true) {
+				
+				for (int i=0;i<2000;i++) {
 					StringBuilder sb = new StringBuilder(1024);
 					Map<JointType, Point3D> pontos = ggv.getSkel3d();
 					sb.append("data: {");
@@ -133,6 +135,7 @@ public class HttpsPoseServer {
 				ex.printStackTrace();
 			}
 			he.getResponseBody().close();
+			he.close();
 		}
 
 	}
