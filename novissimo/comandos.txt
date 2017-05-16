@@ -1,0 +1,7 @@
+comandos
+
+
+keytool -genkey -keyalg RSA -alias localhost -keystore poseserverkey.jks -storepass password -validity 360 -keysize 2048
+
+
+keytool -export -alias localhost -file localhost.cer -keystore poseserverkey.jks
